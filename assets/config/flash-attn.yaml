@@ -1,0 +1,29 @@
+# Model configuration parameters
+input_dim: 5
+embed_dim: 64
+num_heads: 8
+num_layers: 4
+lr: 5.0e-5  # Reduced learning rate
+weight_decay: 1.0e-3  # Updated weight decay
+
+# Training configuration
+limit_val_batches: 100  # Use a fraction of validation data for faster training
+accumulate_grad_batches: 8  # Gradient accumulation
+gradient_clip_val: 0.5  # Gradient clipping for stability
+batch_size: 32  # Batch size
+sequence_length: 2048  # Sequence length
+epochs: 10  # Number of epochs
+log_every_n_steps: 10  # Log every n steps
+
+# Data configuration
+num_workers: 4  # Number of workers for data loading
+data_dir: /gcs/  # Directory for processed data
+data_splits: [0.8, 0.1, 0.1]  # Train/Validation/Test splits
+chkp_dir: /gcs/  # Checkpoint directory
+
+# Hardware configuration
+nodes: 1  # Number of nodes
+devices: 1  # Number of devices (GPUs)
+accelerator: "gpu"  # Use GPU for training
+strategy: "auto"  # Distributed Data Parallel
+precision: "bf16-mixed"  # Mixed precision training
