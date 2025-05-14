@@ -1,0 +1,45 @@
+FROM nvcr.io/nvidia/pytorch:25.01-py3
+
+# ----------------------------------
+# Core libraries and dependencies
+# ----------------------------------
+WORKDIR /workdir
+
+# Install flash attention
+RUN git clone https://github.com/state-spaces/mamba.git /workdir/mamba && \
+    cd /workdir/mamba && \
+    pip install -e .
+
+# Install Causal Conv1D
+RUN git clone https://github.com/Dao-AILab/causal-conv1d.git /workdir/causal-conv1d && \
+    cd /workdir/causal-conv1d && \
+    pip install -e . 
+
+# Install other dependencies
+RUN pip install --no-cache-dir \
+    # For training
+    lightning \
+    tensorboard \
+    pydantic \
+    # For local development
+    ipykernel \
+    ruff \
+    nbformat \
+    ipywidgets \
+    tqdm \
+    # Dataset access
+    synapseclient \
+    datasets \
+    litdata \
+    # For cloud training
+    google-cloud-aiplatform \
+    google-cloud-pipeline-components \
+    db-dtypes 
+
+
+ENV NCCL_SOCKET_IFNAME=^docker0,lo
+
+WORKDIR /workspace
+# Healthcheck for GPUs
+HEALTHCHECK --interval=30s --timeout=30s --retries=3 \
+    CMD nvidia-smi || exit 1
