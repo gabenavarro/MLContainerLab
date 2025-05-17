@@ -1,0 +1,25 @@
+accelerator: gpu
+accumulate_grad_batches: 8
+batch_size: 32
+chkp_dir: /workspace/datasets/checkpoints
+data_dir: /gcs/your-gcp-training-bucket/dataset/
+data_splits:
+- 0.8
+- 0.1
+- 0.1
+devices: 1
+embed_dim: 64
+epochs: 50
+gradient_clip_val: 0.5
+input_dim: 5
+limit_val_batches: 100
+log_every_n_steps: 10
+lr: 5.0e-05
+nodes: 1
+num_heads: 8
+num_layers: 4
+num_workers: 4
+precision: bf16-mixed
+sequence_length: 2048
+strategy: auto
+weight_decay: 0.001
