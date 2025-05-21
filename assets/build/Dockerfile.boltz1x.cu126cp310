@@ -29,8 +29,7 @@ RUN pip install --no-cache-dir \
     # For cloud inference
     google-cloud-aiplatform \
     google-cloud-pipeline-components \
-    db-dtypes 
-
+    db-dtypes
 
 ENV NCCL_SOCKET_IFNAME=^docker0,lo
 
