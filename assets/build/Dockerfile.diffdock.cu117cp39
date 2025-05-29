@@ -1,0 +1,24 @@
+FROM rbgcsail/diffdock:v1.1.3
+
+# Sent environment variables
+ENV PATH=/home/appuser/micromamba/envs/diffdock/bin:$HOME/.local/bin:$PATH
+
+# Install other dependencies
+RUN pip install --no-cache-dir \
+    # For local development
+    ipykernel \
+    ruff \
+    nbformat \
+    ipywidgets \
+    tqdm \
+    # For cloud inference
+    google-cloud-aiplatform \
+    google-cloud-pipeline-components \
+    db-dtypes
+
+ENV NCCL_SOCKET_IFNAME=^docker0,lo
+
+WORKDIR /workspace
+# Healthcheck for GPUs
+HEALTHCHECK --interval=30s --timeout=30s --retries=3 \
+    CMD nvidia-smi || exit 1
