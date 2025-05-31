@@ -1,7 +1,8 @@
 FROM rbgcsail/diffdock:v1.1.3
 
 # Sent environment variables
-ENV PATH=/home/appuser/micromamba/envs/diffdock/bin:$HOME/.local/bin:$PATH
+ENV PATH=/home/appuser/micromamba/envs/diffdock/bin:/home/appuser/micromamba/bin:$HOME/.local/bin:$PATH
+ENV ENV_NAME="diffdock"
 
 # Install other dependencies
 RUN pip install --no-cache-dir \
@@ -16,9 +17,22 @@ RUN pip install --no-cache-dir \
     google-cloud-pipeline-components \
     db-dtypes
 
+# Install micromamba dependencies
+RUN micromamba self-update -c conda-forge -y && \
+    micromamba install -c conda-forge -y wget git
+
+# wget https://dl.fbaipublicfiles.com/fair-esm/regression/esm2_t33_650M_UR50D-contact-regression.pt" to /home/appuser/.cache/torch/hub/checkpoints/esm2_t33_650M_UR50D-contact-regression.pt
+RUN mkdir -p /home/appuser/.cache/torch/hub/checkpoints && \
+    wget https://dl.fbaipublicfiles.com/fair-esm/regression/esm2_t33_650M_UR50D-contact-regression.pt -O /home/appuser/.cache/torch/hub/checkpoints/esm2_t33_650M_UR50D-contact-regression.pt && \
+    wget https://dl.fbaipublicfiles.com/fair-esm/models/esm2_t33_650M_UR50D.pt -O /home/appuser/.cache/torch/hub/checkpoints/esm2_t33_650M_UR50D.pt
+
+# Set environment variables
+ENV PATH=/home/appuser/micromamba/envs/diffdock/bin:$HOME/.local/bin:$PATH
 ENV NCCL_SOCKET_IFNAME=^docker0,lo
 
-WORKDIR /workspace
 # Healthcheck for GPUs
 HEALTHCHECK --interval=30s --timeout=30s --retries=3 \
     CMD nvidia-smi || exit 1
+
+# Set bash as the default shell
+SHELL ["/bin/bash", "-c"]
