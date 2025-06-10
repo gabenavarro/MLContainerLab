@@ -1,0 +1,41 @@
+FROM igashov/drugflow:0.0.3
+
+# Get the DrugFlow checkpoint
+RUN mkdir -p /models/drugflow && \
+    # Base DrugFlow model
+    wget -P /models/drugflow https://zenodo.org/records/14919171/files/drugflow.ckpt -O /models/drugflow/drugflow.ckpt && \
+    # DrugFlow + confidence head
+    wget -P /models/drugflow https://zenodo.org/records/14919171/files/drugflow_ood.ckpt -O /models/drugflow/drugflow_ood.ckpt && \
+    # FlexFlow
+    wget -P /models/drugflow https://zenodo.org/records/14919171/files/flexflow.ckpt -O /models/drugflow/flexflow.ckpt && \
+    # DrugFlow after preference alignment
+    wget -P /models/drugflow https://zenodo.org/records/14919171/files/drugflow_pa_comb.ckpt -O /models/drugflow/drugflow_pa_comb.ckpt
+
+# Install other dependencies
+RUN conda install -c conda-forge -y \
+    # For local development
+    ipykernel \
+    ruff \
+    nbformat \
+    ipywidgets \
+    tqdm \
+    # For cloud inference
+    google-cloud-aiplatform \
+    db-dtypes
+
+RUN pip install --no-cache-dir \
+    # For local development
+    google-cloud-pipeline-components
+
+
+# Clone the DrugFlow repository and move to /workspace
+WORKDIR /workspace
+RUN git clone https://github.com/LPDI-EPFL/DrugFlow.git && \
+    mv DrugFlow/* /workspace
+
+# Healthcheck for GPUs
+HEALTHCHECK --interval=30s --timeout=30s --retries=3 \
+    CMD nvidia-smi || exit 1
+
+# # Set bash as the default shell
+# SHELL ["/bin/bash", "-c"]
