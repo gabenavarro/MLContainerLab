@@ -17,7 +17,7 @@ RUN apt-get update && \
 
 # Install other dependencies
 RUN pip install --no-cache-dir \
-    boltz==1.0.0 \
+    boltz==2.0.3 \
     lightning \
     tensorboard \
     # For local development
