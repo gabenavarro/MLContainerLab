@@ -12,7 +12,8 @@ RUN mkdir -p /models/drugflow && \
     wget -P /models/drugflow https://zenodo.org/records/14919171/files/drugflow_pa_comb.ckpt -O /models/drugflow/drugflow_pa_comb.ckpt
 
 # Install other dependencies
-RUN conda install -c conda-forge -y \
+RUN conda install -c conda-forge -c bioconda -y \
+    reduce \
     # For local development
     ipykernel \
     ruff \
