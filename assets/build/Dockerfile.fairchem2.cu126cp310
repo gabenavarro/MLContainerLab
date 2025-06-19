@@ -1,0 +1,44 @@
+FROM pytorch/pytorch:2.7.0-cuda12.6-cudnn9-runtime
+
+# Install dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    git \
+    wget && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install dependencies
+RUN pip install --no-cache-dir \
+    # Main repo and models weights
+    fairchem-core==2.2.0 \
+    huggingface_hub[cli] \
+    # For local development
+    ipykernel \
+    ruff \
+    nbformat \
+    ipywidgets \
+    widgetsnbextension \ 
+    ipympl \
+    jupyter_contrib_nbextensions \
+    jupyter \
+    tqdm \
+    # For cloud inference
+    google-cloud-aiplatform \
+    google-cloud-pipeline-components \
+    db-dtypes
+
+# Install conda dependencies
+RUN conda install -c conda-forge -y \
+    conda-forge::rdkit \
+    conda-forge::openbabel
+    
+# Huggingface access token
+COPY /workspace/assets/secrets/huggingface.token* /root/.cache/huggingface/token
+
+ENV NCCL_SOCKET_IFNAME=^docker0,lo
+
+WORKDIR /workspace
+# Healthcheck for GPUs
+HEALTHCHECK --interval=30s --timeout=30s --retries=3 \
+    CMD nvidia-smi || exit 1
