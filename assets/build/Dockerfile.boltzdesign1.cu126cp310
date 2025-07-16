@@ -1,0 +1,63 @@
+# CUDA base image with cuDNN support
+FROM nvidia/cuda:12.6.3-cudnn-runtime-ubuntu22.04
+
+# Set environment
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    MAMBA_EXE="/opt/conda/bin/mamba" \
+    MAMBA_ROOT_PREFIX="/opt/conda" \
+    PATH="/opt/conda/bin:$PATH" 
+
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget git curl ca-certificates bzip2 build-essential libglib2.0-0 \
+    libxext6 libsm6 libxrender1 git-lfs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install mamba as package manager
+RUN wget -O Miniforge3.sh \
+  "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" && \
+  bash Miniforge3.sh -b -p "/opt/conda" && \
+  rm Miniforge3.sh
+
+# Install everything into base environment
+RUN mamba install -y -c conda-forge \
+    python=3.10 ipykernel matplotlib seaborn prody tqdm PyYAML requests \
+    pypdb py3Dmol pip && \
+    pip install -U pip && \
+    pip install logmd==0.1.45
+
+# Install PyRosetta
+RUN pip install -U pip && \
+    pip install pyrosettacolabsetup pyrosetta-installer && \
+    python -c 'import pyrosetta_installer; pyrosetta_installer.install_pyrosetta()' && \
+    python -m ipykernel install --name=base --display-name="Boltz Design"
+
+# Clone BoltzDesign1 repo
+WORKDIR /workspace
+RUN git clone https://github.com/yehlincho/BoltzDesign1.git
+WORKDIR /workspace/BoltzDesign1
+
+# Install boltz module
+RUN pip install -e ./boltz
+
+# Download Boltz weights
+RUN python -c "\
+from boltz.main import download; \
+from pathlib import Path; \
+cache = Path.home() / '.boltz'; \
+cache.mkdir(parents=True, exist_ok=True); \
+download(cache)"
+
+# Setup LigandMPNN if exists
+RUN if [ -d "LigandMPNN" ]; then \
+    cd LigandMPNN && bash get_model_params.sh "./model_params"; \
+    cd ..; \
+    fi
+
+# Make DAlphaBall.gcc executable
+RUN chmod +x boltzdesign/DAlphaBall.gcc || echo "Warning: Failed to chmod DAlphaBall.gcc"
+
+# Default to bash
+ENTRYPOINT ["/bin/bash"]
