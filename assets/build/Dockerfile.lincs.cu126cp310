@@ -1,0 +1,75 @@
+# Use NVIDIA CUDA base image with Ubuntu 22.04 and Python 3.10
+FROM nvidia/cuda:12.6.3-cudnn-runtime-ubuntu22.04
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    wget \
+    curl \
+    # Boost libraries (for molecular tools)
+    libboost-all-dev \
+    libssl-dev \
+    libzmq3-dev \
+    # Python development
+    python3-dev \
+    python3-pip \
+    python3-setuptools \
+    python3-wheel \
+    # RDKit system dependencies
+    libxrender1 \
+    libxext6 \
+    libsm6 \
+    # HDF5 libraries for LINCS data
+    libhdf5-dev \
+    libhdf5-serial-dev \
+    p7zip-full \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages for ceSAR pipeline
+RUN python3 -m pip install --upgrade pip setuptools && \
+    pip install --no-cache-dir \
+    # Structure prediction/docking
+    boltz==2.0.3 \
+    lightning \
+    tensorboard \
+    # LINCS data processing
+    cmapPy \
+    h5py \
+    tables \
+    # Data science core
+    pandas \
+    numpy \
+    scipy \
+    scikit-learn \
+    pyarrow \
+    # Cheminformatics
+    rdkit \
+    # Protein structure manipulation
+    biopython \
+    # Visualization
+    matplotlib \
+    seaborn \
+    plotly \
+    # Utilities
+    requests \
+    tqdm \
+    pyyaml \
+    # Development tools
+    ipykernel \
+    jupyter \
+    jupyterlab \
+    ruff \
+    nbformat \
+    ipywidgets \
+    # Parallel processing
+    numba
+
+ENV NCCL_SOCKET_IFNAME=^docker0,lo
+
+WORKDIR /workspace
+# Healthcheck for GPUs
+HEALTHCHECK --interval=30s --timeout=30s --retries=3 \
+    CMD nvidia-smi || exit 1
